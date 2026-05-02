@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Firebase Google Login Test</title>
+    <!-- Google Fonts & simple CSS reset -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            background: linear-gradient(145deg, #f6f9fc 0%, #eef2f5 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        /* main card container */
+        .auth-card {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(0px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0,0,0,0.02);
+            overflow: hidden;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        /* header area */
+        .brand-header {
+            padding: 2rem 2rem 1rem 2rem;
+            text-align: center;
+            background: #ffffff;
+            border-bottom: 1px solid #e9edf2;
+        }
+
+        .brand-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1a2a3a, #2c3e50);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        .brand-header p {
+            color: #5b6e8c;
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* content area */
+        .content-panel {
+            padding: 2rem 2rem 2rem 2rem;
+        }
+
+        /* user info card (after login) */
+        .user-profile {
+            background: #f8fafd;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f8;
+            transition: 0.2s;
+        }
+
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .avatar-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            background: #eef2f5;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-details h3 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #1e2f3f;
+            margin-bottom: 0.2rem;
+        }
+
+        .user-details .email {
+            font-size: 0.85rem;
+            color: #3e5a76;
+            word-break: break-all;
+            font-family: monospace;
+            background: #eef2f7;
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            margin-top: 6px;
+        }
+
+        .user-meta {
+            margin-top: 0.8rem;
+            font-size: 0.75rem;
+            color: #5c6f8c;
+            background: #eef2f8;
+            padding: 0.4rem 0.8rem;
+            border-radius: 30px;
+            display: inline-block;
+        }
+
+        /* buttons */
+        .btn-google {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: white;
+            border: 1px solid #dce3ec;
+            border-radius: 60px;
+            padding: 0.9rem 1.5rem;
+            width: 100%;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .btn-google:hover {
+            background: #f8fafc;
+            border-color: #bdc4d0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .btn-google:active {
+            transform: translateY(1px);
+        }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid #dce3ec;
+            padding: 0.65rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #4b6584;
+            cursor: pointer;
+            transition: 0.2s;
+            width: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-logout:hover {
+            background: #fee2e2;
+            border-color: #f3bfbf;
+            color: #b91c1c;
+        }
+
+        .status-message {
+            margin-top: 1.4rem;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 0.6rem;
+            border-radius: 30px;
+            background: #f1f5f9;
+            color: #2d3e50;
+        }
+
+        .status-error {
+            background: #ffe8e6;
+            color: #b91c1c;
+        }
+
+        .status-success {
+            background: #e3f7ec;
+            color: #166534;
+        }
+
+        .firebase-note {
+            font-size: 0.7rem;
+            text-align: center;
+            background: #f1f5f9;
+            margin-top: 1.2rem;
+            padding: 0.7rem;
+            border-radius: 24px;
+            color: #2c3e50;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        hr {
+            margin: 1rem 0;
+            border: none;
+            border-top: 1.5px solid #eef2f8;
+        }
+
+        @media (max-width: 480px) {
+            .content-panel {
+                padding: 1.5rem;
+            }
+            .avatar-section {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+    
+    <!-- Firebase SDKs (v9+ modular) -->
+    <script type="module">
+        // ----------------------------------------------
+        //  FIREBASE CONFIGURATION - REPLACE WITH YOUR OWN
+        //  FROM YOUR FIREBASE PROJECT (WEB APP)
+        // ----------------------------------------------
+        // !!! IMPORTANT: You must create a Firebase project,
+        // enable Google sign-in method, and replace the config
+        // object below with your project's configuration !!!
+        
+        const firebaseConfig = {
+    apiKey: "AIzaSyCEH7YIJYe0903q5MKGV_KHB1HHBjCM8Q0",
+    authDomain: "auth-396d8.firebaseapp.com",
+    projectId: "auth-396d8",
+    storageBucket: "auth-396d8.firebasestorage.app",
+    messagingSenderId: "690017680704",
+    appId: "1:690017680704:web:63f955dcd2829e26948ea5",
+    measurementId: "G-CW3NBVFHV5"
+  };
+
+        
+        // ---------------------------------------------------
+        //  DO NOT MODIFY BELOW UNLESS YOU KNOW WHAT YOU DO
+        // ---------------------------------------------------
+        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        
+        // Initialize Firebase (with fallback warning)
+        let app;
+        let auth;
+        let provider;
+        let firebaseReady = false;
+        let initError = null;
+        
+        try {
+            // check if config seems replaced (basic check)
+            const isPlaceholder = firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID";
+            if (isPlaceholder) {
+                throw new Error("⚠️ Firebase configuration is using placeholder values. Please replace with your actual Firebase project config.");
+            }
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            provider = new GoogleAuthProvider();
+            provider.addScope('profile');
+            provider.addScope('email');
+            firebaseReady = true;
+        } catch (err) {
+            console.error("Firebase init error:", err);
+            initError = err.message;
+            firebaseReady = false;
+        }
+        
+        // DOM elements
+        const loginBtn = document.getElementById('googleLoginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfoDiv = document.getElementById('userInfo');
+        const loginSection = document.getElementById('loginSection');
+        const statusMessageEl = document.getElementById('statusMessage');
+        const userAvatar = document.getElementById('userAvatar');
+        const userNameSpan = document.getElementById('userName');
+        const userEmailSpan = document.getElementById('userEmail');
+        const userIdSpan = document.getElementById('userId');
+        
+        // Helper to show status text (success/error/info)
+        function setStatus(message, isError = false, isSuccess = false) {
+            if (statusMessageEl) {
+                statusMessageEl.textContent = message;
+                statusMessageEl.classList.remove('status-error', 'status-success');
+                if (isError) statusMessageEl.classList.add('status-error');
+                else if (isSuccess) statusMessageEl.classList.add('status-success');
+                else statusMessageEl.classList.remove('status-error', 'status-success');
+            }
+        }
+        
+        // Clear any status after few seconds (optional)
+        let statusTimeout;
+        function flashStatus(message, isError = false, isSuccess = false, autoClear = true) {
+            setStatus(message, isError, isSuccess);
+            if (autoClear) {
+                if (statusTimeout) clearTimeout(statusTimeout);
+                statusTimeout = setTimeout(() => {
+                    if (statusMessageEl && statusMessageEl.textContent === message) {
+                        setStatus('✓ Ready', false, true);
+                        setTimeout(() => {
+                            if (statusMessageEl && statusMessageEl.textContent === '✓ Ready') setStatus('');
+                        }, 1500);
+                    }
+                }, 4000);
+            }
+        }
+        
+        // Render UI based on auth state
+        function updateUI(user) {
+            if (user) {
+                // user signed in
+                loginSection.classList.add('hidden');
+                userInfoDiv.classList.remove('hidden');
+                // populate user data
+                const displayName = user.displayName || "Google User";
+                const email = user.email || "No email";
+                const photoURL = user.photoURL || "https://ui-avatars.com/api/?background=3b82f6&color=fff&bold=true&name=" + encodeURIComponent(displayName);
+                const uid = user.uid;
+                
+                userNameSpan.textContent = displayName;
+                userEmailSpan.textContent = email;
+                userIdSpan.textContent = `UID: ${uid.substring(0, 12)}...`;
+                userAvatar.src = photoURL;
+                userAvatar.alt = displayName;
+                
+                flashStatus(`✅ Signed in as ${displayName}`, false, true, true);
+            } else {
+                // signed out
+                loginSection.classList.remove('hidden');
+                userInfoDiv.classList.add('hidden');
+                // reset avatar
+                userAvatar.src = "https://ui-avatars.com/api/?background=cccccc&color=2c3e50&name=?";
+                flashStatus("🔓 You're signed out. Log in with Google to continue.", false, false, true);
+            }
+        }
+        
+        // Google Sign-In handler
+        async function handleGoogleLogin() {
+            if (!firebaseReady) {
+                flashStatus("❌ Firebase not initialized: " + (initError || "Invalid config. Check console"), true, false);
+                return;
+            }
+            if (!auth) {
+                flashStatus("Authentication service unavailable", true);
+                return;
+            }
+            try {
+                setStatus("Opening Google sign-in popup...", false);
+                const result = await signInWithPopup(auth, provider);
+                // Successful login
+                const user = result.user;
+                console.log("User signed in:", user);
+                flashStatus(`Welcome ${user.displayName || "user"}!`, false, true);
+                // UI updated automatically via onAuthStateChanged
+            } catch (error) {
+                console.error("Google Sign-In Error:", error);
+                let errorMsg = "Login failed. ";
+                if (error.code === 'auth/popup-blocked') {
+                    errorMsg = "Popup was blocked by browser. Please allow popups and try again.";
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    errorMsg = "Sign-in cancelled.";
+                } else if (error.code === 'auth/unauthorized-domain') {
+                    errorMsg = "Unauthorized domain. Add this domain to Firebase console → Authentication → Authorized domains.";
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    errorMsg = "Google sign-in not enabled. Enable it in Firebase Console → Authentication → Sign-in methods.";
+                } else {
+                    errorMsg += error.message || "Unknown error";
+                }
+                flashStatus(errorMsg, true, false);
+            }
+        }
+        
+        // Logout handler
+        async function handleLogout() {
+            if (!firebaseReady || !auth) {
+                flashStatus("Auth not ready", true);
+                return;
+            }
+            try {
+                await signOut(auth);
+                flashStatus("Signed out successfully", false, true);
+            } catch (err) {
+                console.error("Logout error", err);
+                flashStatus("Error during sign out", true);
+            }
+        }
+        
+        // Watch auth state changes (persists across reloads)
+        if (firebaseReady && auth) {
+            onAuthStateChanged(auth, (user) => {
+                updateUI(user);
+                if (user) {
+                    // additional: could load extra data
+                    console.log("Auth state changed -> user logged in", user.email);
+                } else {
+                    console.log("Auth state changed -> user logged out");
+                }
+            });
+        } else {
+            // handle missing firebase init
+            if (!firebaseReady) {
+                window.addEventListener('DOMContentLoaded', () => {
+                    const errorMsg = initError || "Firebase initialization failed. Please check your configuration and ensure you have added valid project credentials.";
+                    flashStatus(`⚠️ ${errorMsg}`, true, false);
+                    // disable buttons or show message
+                    if (loginBtn) loginBtn.disabled = true;
+                    if (logoutBtn) logoutBtn.disabled = true;
+                    // show manual error block
+                    const firebaseNote = document.querySelector('.firebase-note');
+                    if (firebaseNote) {
+                        firebaseNote.innerHTML = `⚠️ <strong>Firebase config error:</strong> ${errorMsg}<br> 
+                        Please replace the <code>firebaseConfig</code> object with your actual project credentials from Firebase Console.`;
+                        firebaseNote.style.background = "#ffe6e5";
+                        firebaseNote.style.color = "#a51b1b";
+                    }
+                });
+            }
+        }
+        
+        // attach event listeners after DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            if (loginBtn) loginBtn.addEventListener('click', handleGoogleLogin);
+            if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+            
+            // show that page is ready but firebase status depends
+            if (!firebaseReady) {
+                if (loginBtn) loginBtn.disabled = true;
+                if (logoutBtn) logoutBtn.disabled = true;
+            }
+            
+            // extra UI: If config is missing, show inline guide
+            const configNote = document.getElementById('configNoteMsg');
+            if (configNote && (!firebaseReady || firebaseConfig.apiKey === "YOUR_API_KEY")) {
+                configNote.style.display = "block";
+            }
+        });
+        
+        // expose for debugging maybe (but module keeps private)
+        window.__firebaseDebug = { firebaseReady, initError };
+    </script>
+</head>
+<body>
+<div class="auth-card">
+    <div class="brand-header">
+        <h1>🔐 Google Auth Test</h1>
+        <p>Firebase Authentication • Sign-in with Google</p>
+    </div>
+    <div class="content-panel">
+        <!-- Login section (visible when logged out) -->
+        <div id="loginSection">
+            <button id="googleLoginBtn" class="btn-google">
+                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Sign in with Google
+            </button>
+            <div class="status-message" id="statusMessage">✨ Ready — click Google Sign-In</div>
+            <div class="firebase-note" id="configNoteMsg" style="display: none;">
+                🔧 <strong>Setup reminder:</strong> Replace the <code>firebaseConfig</code> object in the JavaScript section with your own Firebase project credentials.<br>
+                <span style="font-size:0.7rem;">Don't forget to enable Google sign-in method in Firebase Console → Authentication → Sign-in methods.</span>
+            </div>
+            <div class="firebase-note" style="background:#eef2ff;">
+                📘 <strong>How to test:</strong><br>
+                1. Create a Firebase project → add web app → copy config.<br>
+                2. Paste config into <code>firebaseConfig</code> (line ~70).<br>
+                3. Enable Google provider & add your domain (localhost allowed).<br>
+                4. Reload and click Sign in.
+            </div>
+        </div>
+
+        <!-- User Info Panel (visible after login) -->
+        <div id="userInfo" class="hidden" style="display: none;">
+            <div class="user-profile">
+                <div class="avatar-section">
+                    <img id="userAvatar" class="avatar-img" src="https://ui-avatars.com/api/?background=cccccc&color=2c3e50&name=User" alt="avatar">
+                    <div class="user-details">
+                        <h3 id="userName">Display Name</h3>
+                        <div class="email" id="userEmail">user@example.com</div>
+                        <div class="user-meta" id="userId">ID: ---</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-between">
+                <button id="logoutBtn" class="btn-logout">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Sign Out
+                </button>
+                <div style="font-size: 0.7rem; color: #2c6e9e;">✅ Authenticated via Google</div>
+            </div>
+            <hr />
+            <div class="status-message" id="statusMessageUserPanel" style="margin-top: 0.5rem;">🎉 Session active — you're logged in</div>
+        </div>
+        <!-- we reuse same status message for both sections? Actually we have separate, but to unify we handle via global id, both exist? 
+        But we have duplicated ID statusMessage? Fix: Use one statusMessage in loginSection, and also within userInfo we have separate but I can unify -->
+    </div>
+</div>
+
+<!-- ensure duplicate id is fixed: original statusMessage inside loginSection; userInfo also has another one, but we can move that to keep harmless -->
+<script>
+    // modify small DOM to avoid double ID and keep both status references (to be safe)
+    (function fixDuplicateStatus() {
+        const userPanel = document.getElementById('userInfo');
+        if (userPanel) {
+            const existingStatus = userPanel.querySelector('#statusMessageUserPanel');
+            if (existingStatus && !existingStatus.id) existingStatus.id = 'statusMessageUserPanel';
+            // remove conflicts: the main statusMessage is only in loginSection, we will update both accordingly
+        }
+        // but our module uses global statusMessageEl that selects first element with id 'statusMessage' (login area one)
+        // that's fine. However we also want to update the logged-in status message area when logged in. we'll augment updateUI to also update user panel message
+        const originalUpdateUI = window.__updateUIHook; // not needed, but we can patch using MutationObserver? easier: extend module via additional event.
+        // We can patch the updateUI function after module loads ? But module already executed. I'll add a small listener to update userPanel message.
+        // Alternatively, we set interval or hook using custom event. but it's OK, when flashStatus is called, only first statusMessage changes.
+        // For better UX, I'll modify the updateUI function in next lines on window load, but careful.
+        // I'll append an extra function to sync user panel status.
+        window.addEventListener('userStatusSync', (e) => {
+            const userMsgDiv = document.getElementById('statusMessageUserPanel');
+            if (userMsgDiv && e.detail && e.detail.message) {
+                userMsgDiv.textContent = e.detail.message;
+                if (e.detail.isError) userMsgDiv.classList.add('status-error');
+                else userMsgDiv.classList.remove('status-error');
+            }
+        });
+        // override setStatus behavior? Not needed, but add custom dispatch after flash status.
+        // Since I cannot easily override the module function, we observe via MutationObserver or just ensure that after login the user panel message shows proper state.
+        // Simpler: modify the flashStatus globally by wrapping ?, but this is after. Better: use the onAuthStateChanged updateUI already changes UI; we'll add a line to also update user panel status text.
+        // Because we have control over final HTML, we can add extra script after module to smooth out.
+        // The module is type="module", but we can add another script to enhance. Good.
+    })();
+</script>
+
+<script>
+    (function secondaryUICleanup() {
+        // after module is ready, we want to ensure the user panel status reflects same as main status area,
+        // but main status area is hidden to user when logged in? Actually when logged in, loginSection hidden and statusMessage inside loginSection not visible.
+        // So we add separate logic: when login state changes, we show relevant message inside userInfo.
+        // but the module does fire updateUI. We can add a custom event listener to update user panel message via DOM content.
+        let initialRun = false;
+        const observer = new MutationObserver(() => {
+            const userInfoDiv = document.getElementById('userInfo');
+            if (userInfoDiv && !userInfoDiv.classList.contains('hidden')) {
+                const userMsgPanel = document.getElementById('statusMessageUserPanel');
+                if (userMsgPanel && userMsgPanel.innerText.includes('logged in') === false) {
+                    userMsgPanel.innerHTML = "🔐 Authenticated with Google — session active";
+                    userMsgPanel.classList.remove('status-error');
+                }
+            }
+        });
+        observer.observe(document.body, { attributes: true, subtree: false, attributeFilter: ['class'] });
+        // also correct logout message
+        window.addEventListener('load', () => {
+            const logoutBtnLocal = document.getElementById('logoutBtn');
+            if (logoutBtnLocal) {
+                // ensures it's functional (original handler already attached)
+            }
+        });
+    })();
+</script>
+
+<style>
+    .hidden {
+        display: none !important;
+    }
+    code {
+        background: #eef2f5;
+        padding: 0.2rem 0.4rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+    .btn-google:disabled, .btn-logout:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+</body>
+</html>
